@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:seks/classes/auth.dart';
 import 'package:seks/classes/encounter.dart';
 import 'package:seks/widgets/dialogs.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -137,8 +139,11 @@ class _AddScreen extends State<AddScreen> {
         FirebaseFirestore storage = FirebaseFirestore.instance;
         await storage.collection('users').doc(user.uid).collection('encounters').doc('encounter_$id').set(newEncounter.toJson());
       }
+      if(widget.data == null){
+        context.read<AuthService>().addEncounter(newEncounter);
+      }
       Navigator.of(progressKey.currentContext ?? context).pop();
-      Navigator.of(context).pop(newEncounter);
+      Navigator.of(context).pop();
     }
   }
 
@@ -236,7 +241,7 @@ class _AddScreen extends State<AddScreen> {
                       )),
                       TextButton(
                           onPressed: () async {
-                            var newPlace = await Dialogs.showAddPlaceDialog(context);
+                            var newPlace = await Dialogs.showPlaceDialog(context);
                             if (newPlace != null) {
                               Dialogs.showLoadingDialog(context, progressKey, 'Guardando...');
                               var places_ = places;
@@ -282,7 +287,7 @@ class _AddScreen extends State<AddScreen> {
                           )),
                           TextButton(
                               onPressed: () async {
-                                Partner? newPartner = await Dialogs.showAddPartnerDialog(context);
+                                Partner? newPartner = await Dialogs.showPartnerDialog(context);
                                 if (newPartner != null) {
                                   Dialogs.showLoadingDialog(context, progressKey, 'Guardando...');
                                   var partnerList = partners;

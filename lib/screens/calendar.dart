@@ -1,16 +1,17 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:seks/classes/auth.dart';
 import 'package:seks/classes/encounter.dart';
 import 'package:seks/widgets/expandableCard.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../widgets/dialogs.dart';
 import 'add.dart';
 
 class CalendarScreen extends StatefulWidget {
-  const CalendarScreen({Key? key, required this.data, required this.onEdit, required this.onDelete}) : super(key: key);
-  final Map<String, List<Encounter>> data;
-  final Function(Encounter encounter) onEdit;
-  final Function(String id) onDelete;
+  const CalendarScreen({Key? key}) : super(key: key);
+
 
   @override
   State<StatefulWidget> createState() => _CalendarScreen();
@@ -31,10 +32,15 @@ class _CalendarScreen extends State<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    var encountersMap = context.read<AuthService>().encounterMap;
     return Column(mainAxisSize: MainAxisSize.max, children: [
       TableCalendar(
         locale: 'es',
         weekendDays: const [],
+        calendarStyle: CalendarStyle(
+            isTodayHighlighted: false,
+            holidayDecoration: BoxDecoration(color: Theme.of(context).colorScheme.primary, shape: BoxShape.circle),
+            holidayTextStyle: const TextStyle(color: Colors.white)),
         availableCalendarFormats: const {CalendarFormat.month: 'Mes', CalendarFormat.twoWeeks: '2 Semanas', CalendarFormat.week: 'semana'},
         focusedDay: focusDay,
         firstDay: DateTime.utc(2015, 1, 1),
@@ -48,13 +54,13 @@ class _CalendarScreen extends State<CalendarScreen> {
         },
         holidayPredicate: (day) {
           String i = formatDate(day.millisecondsSinceEpoch, formatType: dateFormatType.moment, isUtc: true);
-          return widget.data[i] != null;
+          return encountersMap[i] != null;
         },
         onDaySelected: (day, day_) {
           String index = formatDate(day.millisecondsSinceEpoch, formatType: dateFormatType.moment, isUtc: true);
           setState(() {
             focusDay = day;
-            encounters = widget.data[index] ?? [];
+            encounters = encountersMap[index] ?? [];
           });
         },
       ),
@@ -79,22 +85,8 @@ class _CalendarScreen extends State<CalendarScreen> {
               itemBuilder: (c, i) => i < encounters.length
                   ? ExpandableCard(
                       data: encounters[i],
-                      onEdit: () async {
-                        Encounter? edited = await Navigator.of(context).push(MaterialPageRoute(
-                            builder: (c) => AddScreen(
-                                  data: encounters[i],
-                                )));
-                        if (edited != null) {
-                          widget.onEdit(edited);
-                        }
-                      },
-                      onDelete: () async {
-                        bool toDelete =
-                            await Dialogs.showDeleteDialog(context, 'Eliminar encuentro de ${formatDate(encounters[i].date, formatType: dateFormatType.onlyDate)} con ${encounters[i].partner.name}');
-                        if (toDelete) {
-                          widget.onDelete(encounters[i].id);
-                        }
-                      })
+                      index: i,
+                    )
                   : const SizedBox(
                       height: 125,
                     )))

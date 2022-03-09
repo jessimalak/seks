@@ -79,7 +79,8 @@ class _SettingsScreen extends State<SettingsScreen> {
       }
     }
     Navigator.of(progressKey.currentContext ?? context, rootNavigator: true).pop();
-    Navigator.of(context).pop(enc);
+    context.read<AuthService>().setEncounters(enc);
+    Navigator.of(context).pop();
   }
 
   @override
@@ -183,22 +184,25 @@ class _SettingsScreen extends State<SettingsScreen> {
           ),
           ListTile(
             onTap: () async {
+              Dialogs.showLoadingDialog(context, progressKey, 'Limpiando...');
               SharedPreferences pref = await SharedPreferences.getInstance();
-              pref.clear();
-              Navigator.of(context).pop([
-                Encounter(id: 'null', duration: 0, date: 0, notes: '', partner: Partner(name: '', age: 0, gender: '', details: '', id: ''), place: 'place', points: 0, positions: [], protection: false)
-              ]);
+              await pref.clear();
+              context.read<AuthService>().clearEncounters();
+              Future.delayed(const Duration(seconds: 2), (){
+                Navigator.of(progressKey.currentContext ?? context).pop();
+              });
             },
             title: const Text('Limpiar datos locales'),
             subtitle: const Text('Elimina la información de tu dispositivo'),
             leading: const Icon(FluentIcons.broom_24_regular),
           ),
           AboutListTile(
-            icon: Icon(FluentIcons.info_24_regular),
+            icon:const Icon(FluentIcons.info_24_regular),
             applicationName: 'Seks',
-            applicationVersion: '0.5.1 Afrodita',
+            applicationVersion: '1.0.0 Afrodita',
             applicationLegalese: 'Seks desarrollada por Malak; (2022)',
-            applicationIcon: Image.asset('assets/logo_512.png'),
+            applicationIcon: ImageIcon(const AssetImage('assets/logo_512.png'), size: 72, color: Theme.of(context).colorScheme.primary,),
+            aboutBoxChildren: const [Text('Recuerda siempre usar protección y realizarte pruebas periodicamente')],
           )
         ],
       ),

@@ -34,14 +34,16 @@ class MyApp extends StatelessWidget {
           localizationsDelegates: const [GlobalMaterialLocalizations.delegate],
           supportedLocales: const [Locale('es')],
           theme: ThemeData(
-              primarySwatch: Colors.pink,
+              useMaterial3: true,
+              colorSchemeSeed: Color(0xffed3770),
               appBarTheme: const AppBarTheme(elevation: 0),
               cardTheme: const CardTheme(color: Color(0xffeeeeee), elevation: 0),
               textTheme: const TextTheme(headline2: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
               inputDecorationTheme: const InputDecorationTheme(errorStyle: TextStyle(color: Colors.red))),
           darkTheme: ThemeData(
               brightness: Brightness.dark,
-              primarySwatch: Colors.pink,
+              useMaterial3: true,
+              colorSchemeSeed: Color(0xffed3770),
               scaffoldBackgroundColor: Colors.black,
               appBarTheme: const AppBarTheme(elevation: 0, color: Color(0xff212121)),
               cardTheme: const CardTheme(color: Color(0xff292929), elevation: 0),
@@ -50,7 +52,7 @@ class MyApp extends StatelessWidget {
               inputDecorationTheme: const InputDecorationTheme(errorStyle: TextStyle(color: Colors.red))),
           // themeMode: ThemeMode.dark,
           initialRoute: 'initial',
-          routes: {'initial': (c) => const MyHomePage(), 'add': (c) => AddScreen()},
+          routes: {'initial': (c) => const MyHomePage(), 'add': (c) => const AddScreen(), 'settings': (c) => const SettingsScreen()},
         ));
   }
 }
@@ -90,9 +92,10 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     listData.sort((a, b) => a.date < b.date ? 1 : 0);
     setState(() {
-      data = listData;
+      // data = listData;
       isLoading = false;
     });
+    context.read<AuthService>().setEncounters(listData);
     var user_ = FirebaseAuth.instance.currentUser;
     if (user_ != null) {
       var dbData = FirebaseFirestore.instance.collection('users').doc(user_.uid);
@@ -148,40 +151,6 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  void addEncounter(Encounter newEncounter) {
-    var encList = data;
-    if (!encList.contains(newEncounter)) {
-      encList.add(newEncounter);
-      encList.sort((a, b) => a.date < b.date ? 1 : 0);
-      setState(() {
-        data = encList;
-      });
-    }
-  }
-
-  void editEncounter(Encounter newEncounter) {
-    var encList = data;
-    int index = encList.indexWhere((element) => element.id == newEncounter.id);
-    encList[index] = newEncounter;
-    setState(() {
-      data = encList;
-    });
-  }
-
-  Future deleteEncounter(String id) async {
-    var listData = data;
-    var user_ = FirebaseAuth.instance.currentUser;
-    if (user_ != null) {
-      var dbData = FirebaseFirestore.instance.collection('users').doc(user_.uid);
-      await dbData.collection('encounters').doc('encounter_$id').delete();
-    }
-    listData.removeWhere((item) => item.id == id);
-    await preferences.remove('encounter_$id');
-    setState(() {
-      data = listData;
-    });
-  }
-
   Map<String, List<Encounter>> calendarData(List<Encounter> newData) {
     Map<String, List<Encounter>> dates_ = {};
     for (Encounter item in newData) {
@@ -203,45 +172,15 @@ class _MyHomePageState extends State<MyHomePage> {
         actions: [
           IconButton(
               onPressed: () async {
-                List<Encounter>? syncData = await Navigator.push(context, MaterialPageRoute(builder: (c) => SettingsScreen()));
-                if (syncData!.isNotEmpty) {
-                  if (syncData[0].id == 'null') {
-                    setState(() {
-                      data = [];
-                    });
-                  } else {
-                    syncData.sort((a, b) => a.date < b.date ? 1 : 0);
-                    setState(() {
-                      data = syncData;
-                    });
-                  }
-                }
+                Navigator.pushNamed(context, 'settings');
               },
               icon: const Icon(FluentIcons.settings_24_regular))
         ],
       ),
-      body: PageView( controller: _pageController,
-        children: isLoading ? [SpinKitSpinningLines(color: Color(0xffed3770))] : [
-          ListScreen(
-            data: data,
-            onEdit: (newEncounter) {
-              editEncounter(newEncounter);
-            },
-            onDelete: (id) {
-              deleteEncounter(id);
-            },
-          ),
-          CalendarScreen(
-            data: calendarData(data),
-            onEdit: (newEncounter) {
-              editEncounter(newEncounter);
-            },
-            onDelete: (id) {
-              deleteEncounter(id);
-            },
-          )
-        ],
-        onPageChanged: (i){
+      body: PageView(
+        controller: _pageController,
+        children: isLoading ? [const SpinKitSpinningLines(color: Color(0xffed3770))] : [const ListScreen(), const CalendarScreen()],
+        onPageChanged: (i) {
           setState(() {
             view = i;
           });
@@ -252,17 +191,14 @@ class _MyHomePageState extends State<MyHomePage> {
         FloatingActionButton(
           heroTag: 'none',
           onPressed: () async {
-            _pageController.animateToPage(view == 0 ? 1 : 0, duration: const Duration(milliseconds: 350), curve: Curves.ease);
+            _pageController.animateToPage(view == 0 ? 1 : 0, duration: const Duration(milliseconds: 500), curve: Curves.ease);
           },
           mini: true,
           child: view == 0 ? const Icon(FluentIcons.calendar_ltr_24_regular) : const Icon(FluentIcons.list_24_regular),
         ),
         FloatingActionButton(
           onPressed: () async {
-            Encounter? newEncounter = await Navigator.push(context, MaterialPageRoute(builder: (c) => AddScreen()));
-            if (newEncounter != null) {
-              addEncounter(newEncounter);
-            }
+            Navigator.pushNamed(context, 'add');
           },
           tooltip: 'Add',
           child: const Icon(FluentIcons.add_24_regular),

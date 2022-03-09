@@ -27,11 +27,12 @@ class Dialogs {
         });
   }
 
-  static Future<String?> showAddPlaceDialog(BuildContext context) async {
+  static Future<String?> showPlaceDialog(BuildContext context, {String? place}) async {
     return await showDialog(
         context: context,
         builder: (c) {
           TextEditingController controller = TextEditingController();
+          controller.text = place ?? '';
           return AlertDialog(
             title: Text('Agregar lugar'),
             actions: [
@@ -49,7 +50,7 @@ class Dialogs {
         });
   }
 
-  static Future<Partner?> showAddPartnerDialog(BuildContext context) async {
+  static Future<Partner?> showPartnerDialog(BuildContext context, {Partner? partner}) async {
     return await showDialog(
         context: context,
         builder: (c) {
@@ -59,7 +60,13 @@ class Dialogs {
           TextEditingController nameController = TextEditingController();
           TextEditingController ageController = TextEditingController();
           TextEditingController detailsController = TextEditingController();
-          String gender = '';
+            String gender =  'Otro';
+          if(partner != null) {
+            gender = partner.gender;
+            nameController.text = partner.name;
+            ageController.text = partner.age.toString();
+            detailsController.text = partner.details;
+          }
           return StatefulBuilder(
               builder: (context, setState) => AlertDialog(
                     title: Text('Agregar pareja'),
@@ -67,7 +74,7 @@ class Dialogs {
                       ElevatedButton(
                           onPressed: () {
                             if (formPartnerKey.currentState!.validate()) {
-                              Partner newPartner = Partner(name: nameController.text, age: int.parse(ageController.text), details: detailsController.text, gender: gender, id: '');
+                              Partner newPartner = Partner(name: nameController.text, age: int.parse(ageController.text), details: detailsController.text, gender: gender, id: partner?.id ?? '');
                               Navigator.of(context).pop(newPartner);
                             }
                           },
@@ -100,7 +107,7 @@ class Dialogs {
                             decoration: const InputDecoration(hintText: 'Edad', icon: Icon(FluentIcons.calendar_empty_24_regular)),
                             keyboardType: TextInputType.number,
                           ),
-                          DropdownButtonFormField(
+                          DropdownButtonFormField( value: gender,
                               validator: (val) => val == null ? 'De alguna forma se debe identificar' : null,
                               decoration: const InputDecoration(icon: Icon(FluentIcons.person_tag_24_regular), hintText: 'Género / Identidad'),
                               items: genders.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),

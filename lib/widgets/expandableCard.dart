@@ -1,14 +1,22 @@
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:expandable/expandable.dart';
+import 'package:provider/provider.dart';
 import 'package:seks/classes/encounter.dart';
 import 'package:seks/screens/add.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../classes/auth.dart';
+import 'dialogs.dart';
 
 class ExpandableCard extends StatelessWidget {
-  const ExpandableCard({Key? key, required this.data, required this.onEdit, required this.onDelete}) : super(key: key);
+  const ExpandableCard({
+    Key? key,
+    required this.data,
+    required this.index,
+  }) : super(key: key);
   final Encounter data;
-  final Function onEdit;
-  final Function onDelete;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -96,15 +104,24 @@ class ExpandableCard extends StatelessWidget {
                 Row(
                   children: [
                     IconButton(
-                        onPressed: () {
-                          onEdit();
+                        onPressed: () async {
+                          Encounter? edited = await Navigator.of(context).push(MaterialPageRoute(
+                              builder: (c) => AddScreen(
+                                    data: data,
+                                  )));
+                          if (edited != null) {
+                            context.read<AuthService>().editEncounter(index, edited);
+                          }
                         },
                         icon: const Icon(FluentIcons.edit_24_regular),
                         iconSize: 18,
                         padding: const EdgeInsets.all(1)),
                     IconButton(
-                      onPressed: () {
-                        onDelete();
+                      onPressed: () async {
+                        bool toDelete = await Dialogs.showDeleteDialog(context, 'Eliminar encuentro de ${formatDate(data.date, formatType: dateFormatType.onlyDate)} con ${data.partner.name}');
+                        if (toDelete) {
+                          context.read<AuthService>().deleteEncounter(data.id, index);
+                        }
                       },
                       icon: const Icon(FluentIcons.delete_24_regular),
                       iconSize: 18,
