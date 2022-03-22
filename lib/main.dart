@@ -12,6 +12,7 @@ import 'package:seks/screens/add.dart';
 import 'package:seks/screens/calendar.dart';
 import 'package:seks/screens/list.dart';
 import 'package:fluentui_system_icons/fluentui_system_icons.dart';
+import 'package:seks/screens/profile.dart';
 import 'package:seks/screens/settings.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -52,7 +53,7 @@ class MyApp extends StatelessWidget {
               inputDecorationTheme: const InputDecorationTheme(errorStyle: TextStyle(color: Colors.red))),
           // themeMode: ThemeMode.dark,
           initialRoute: 'initial',
-          routes: {'initial': (c) => const MyHomePage(), 'add': (c) => const AddScreen(), 'settings': (c) => const SettingsScreen()},
+          routes: {'initial': (c) => const MyHomePage(), 'add': (c) => const AddScreen(), 'settings': (c) => const SettingsScreen(), 'profile': (c)=> ProfileScreen()},
         ));
   }
 }

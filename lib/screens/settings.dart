@@ -106,6 +106,9 @@ class _SettingsScreen extends State<SettingsScreen> {
                     ListTile(
                       title: Text(snap.data?.displayName ?? ''),
                       subtitle: Text(snap.data?.email ?? ''),
+                      onTap: (){
+                        Navigator.pushNamed(context, 'profile');
+                      },
                       trailing: IconButton(
                           onPressed: () async {
                             bool? logout = await showDialog(
